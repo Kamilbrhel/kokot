@@ -1,0 +1,140 @@
+<?php
+session_start();
+
+if (!isset($_SESSION["balance"])) {
+    $_SESSION["balance"] = 1000;
+}
+
+$result = "";
+$winNumber = null;
+
+if ($_SERVER["REQUEST_METHOD"] === "POST") {
+    $bet = intval($_POST["bet"]);
+    $color = $_POST["color"];
+
+    if ($bet > 0 && $bet <= $_SESSION["balance"]) {
+        $winNumber = rand(0, 36);
+        $winColor = ($winNumber == 0) ? "green" : ($winNumber % 2 == 0 ? "black" : "red");
+
+        if ($color === $winColor) {
+            $_SESSION["balance"] += $bet;
+            $result = "🎉 Výhra! Padlo $winNumber ($winColor)";
+        } else {
+            $_SESSION["balance"] -= $bet;
+            $result = "❌ Prohra! Padlo $winNumber ($winColor)";
+        }
+    } else {
+        $result = "⚠️ Neplatná sázka";
+    }
+}
+?>
+
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<title>🎰 PHP Ruleta</title>
+<style>
+body {
+    margin: 0;
+    background: radial-gradient(circle, #222, #000);
+    font-family: Arial, sans-serif;
+    color: white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+.casino {
+    background: #111;
+    border-radius: 15px;
+    padding: 30px;
+    width: 350px;
+    text-align: center;
+    box-shadow: 0 0 30px gold;
+}
+
+h1 {
+    color: gold;
+}
+
+.balance {
+    font-size: 20px;
+    margin-bottom: 15px;
+}
+
+.roulette {
+    width: 150px;
+    height: 150px;
+    border: 8px solid gold;
+    border-radius: 50%;
+    margin: 20px auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 30px;
+    background: conic-gradient(red 0deg 180deg, black 180deg 360deg);
+    transition: transform 2s ease-out;
+}
+
+button {
+    padding: 10px;
+    margin: 5px;
+    width: 80px;
+    font-size: 16px;
+    cursor: pointer;
+    border: none;
+    border-radius: 5px;
+}
+
+.red { background: red; color: white; }
+.black { background: black; color: white; border: 1px solid white; }
+.green { background: green; color: white; }
+
+input {
+    width: 100px;
+    padding: 5px;
+    margin-bottom: 10px;
+}
+
+.result {
+    margin-top: 15px;
+    font-size: 18px;
+}
+</style>
+</head>
+<body>
+
+<div class="casino">
+    <h1>🎰 Ruleta</h1>
+
+    <div class="balance">
+        Zůstatek: <b><?php echo $_SESSION["balance"]; ?> Kč</b>
+    </div>
+
+    <div id="wheel" class="roulette">
+        <?php echo $winNumber !== null ? $winNumber : "?"; ?>
+    </div>
+
+    <form method="POST" onsubmit="spin()">
+        <input type="number" name="bet" placeholder="Sázka" required><br>
+
+        <button class="red" name="color" value="red">Červená</button>
+        <button class="black" name="color" value="black">Černá</button>
+        <button class="green" name="color" value="green">0</button>
+    </form>
+
+    <div class="result"><?php echo $result; ?></div>
+</div>
+
+<script>
+function spin() {
+    let wheel = document.getElementById("wheel");
+    let rotation = Math.floor(Math.random() * 2000) + 1000;
+    wheel.style.transform = "rotate(" + rotation + "deg)";
+}
+</script>
+
+</body>
+</html>
